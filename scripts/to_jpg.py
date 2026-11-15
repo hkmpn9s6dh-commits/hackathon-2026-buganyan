@@ -33,6 +33,17 @@ for s in data["sheets"]:
     dpi = Image.open(dst).info.get("dpi")
     rows.append((dst.name, im.size, f"{dpi[0]:.0f}dpi", f"q{q}", f"{size / 1024 / 1024:.2f} MB"))
 
+# 创作说明 PDF 里要放四张缩略图；这一步必须在这里做——
+# 早先是手工压到 .tmp/thumbs/，全新 clone 里没有这个目录，说明 PDF 就悄悄少了四张图（174 KB vs 618 KB）。
+thumb_dir = ROOT / ".tmp" / "thumbs"
+thumb_dir.mkdir(parents=True, exist_ok=True)
+for s2 in data["sheets"]:
+    src = Image.open(OUT / f"{s2['id']}-{s2['title']}.jpg")
+    w = 620
+    src.resize((w, int(src.height * w / src.width)), Image.LANCZOS).save(
+        thumb_dir / f"{s2['id']}.jpg", "JPEG", quality=88
+    )
+
 for r in rows:
     print("  ".join(str(x) for x in r))
 print(f"共 {len(rows)} 张，上限 10 MB")
